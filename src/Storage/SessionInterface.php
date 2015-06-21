@@ -21,6 +21,8 @@ use League\OAuth2\Server\Entity\SessionEntity;
  */
 interface SessionInterface extends StorageInterface
 {
+    public function get($id);
+
     /**
      * Get a session from an access token
      *
@@ -54,11 +56,10 @@ interface SessionInterface extends StorageInterface
      * @param string $ownerType         Session owner's type (user, client)
      * @param string $ownerId           Session owner's ID
      * @param string $clientId          Client ID
-     * @param string $clientRedirectUri Client redirect URI (default = null)
      *
      * @return integer The session's ID
      */
-    public function create($ownerType, $ownerId, $clientId, $clientRedirectUri = null);
+    public function create($ownerType, $ownerId, $clientId);
 
     /**
      * Associate a scope with a session

@@ -134,8 +134,9 @@ class RefreshTokenGrant extends AbstractGrant
             throw new Exception\InvalidRefreshException();
         }
 
+        $session = $oldRefreshToken->getSession();
+
         // // Get the scopes for the original session
-        // $session = $oldAccessToken->getSession();
         // $scopes = $this->formatScopes($session->getScopes());
         //
         // // Get and validate any requested scopes
@@ -161,7 +162,7 @@ class RefreshTokenGrant extends AbstractGrant
         $newAccessToken = new AccessTokenEntity($this->server);
         $newAccessToken->setId($this->server->generateAccessToken());
         $newAccessToken->setExpireTime($this->getAccessTokenTTL() + time());
-        $newAccessToken->setClientId($client->getId());
+        $newAccessToken->setSession($session);
 
         // foreach ($newScopes as $newScope) {
         //     $newAccessToken->associateScope($newScope);
@@ -175,7 +176,7 @@ class RefreshTokenGrant extends AbstractGrant
             $newRefreshToken = new RefreshTokenEntity($this->server);
             $newRefreshToken->setId($this->server->generateRefreshToken());
             $newRefreshToken->setExpireTime($this->getRefreshTokenTTL() + time());
-            $newRefreshToken->setClientId($client->getId());
+            $newRefreshToken->setSession($session);
             $newRefreshToken->save();
 
             $this->server->getTokenType()->setParam('refresh_token', $newRefreshToken->getId());

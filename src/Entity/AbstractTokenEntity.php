@@ -48,13 +48,6 @@ abstract class AbstractTokenEntity
     protected $expireTime = 0;
 
     /**
-     * The id of the client that generated this token
-     *
-     * @var int
-     */
-    protected $clientId;
-
-    /**
      * Authorization or resource server
      *
      * @var \League\OAuth2\Server\AbstractServer
@@ -90,6 +83,20 @@ abstract class AbstractTokenEntity
     }
 
     /**
+     * Set session
+     *
+     * @param int $session_id
+     *
+     * @return self
+     */
+    public function setSessionById($session_id)
+    {
+        $this->session = $this->server->getSessionStorage()->get($session_id);
+
+        return $this;
+    }
+
+    /**
      * Set the expire time of the token
      *
      * @param integer $expireTime Unix time stamp
@@ -101,6 +108,20 @@ abstract class AbstractTokenEntity
         $this->expireTime = $expireTime;
 
         return $this;
+    }
+
+    /**
+     * Get session
+     *
+     * @return \League\OAuth2\Server\Entity\SessionEntity
+     */
+    public function getSession()
+    {
+        if ($this->session instanceof SessionEntity) {
+            return $this->session;
+        }
+
+        return null;
     }
 
     /**
@@ -121,30 +142,6 @@ abstract class AbstractTokenEntity
     public function isExpired()
     {
         return ((time() - $this->expireTime) > 0);
-    }
-
-    /**
-     * Set the client ID of the token
-     *
-     * @param integer $clientId The client ID
-     *
-     * @return self
-     */
-    public function setClientId($clientId)
-    {
-        $this->clientId = $clientId;
-
-        return $this;
-    }
-
-    /**
-     * Return the token client ID
-     *
-     * @return int
-     */
-    public function getClientId()
-    {
-        return $this->clientId;
     }
 
     /**

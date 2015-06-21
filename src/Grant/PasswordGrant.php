@@ -133,9 +133,9 @@ class PasswordGrant extends AbstractGrant
         }
 
         // Check if user's username and password are correct
-        $user = call_user_func($this->getVerifyCredentialsCallback(), $username, $password);
+        $userId = call_user_func($this->getVerifyCredentialsCallback(), $username, $password);
 
-        if (is_null($user)) {
+        if (is_null($userId)) {
             $this->server->getEventEmitter()->emit(new Event\UserAuthenticationFailedEvent($this->server->getRequest()));
             throw new Exception\InvalidCredentialsException();
         }
@@ -144,17 +144,30 @@ class PasswordGrant extends AbstractGrant
         $scopeParam = $this->server->getRequest()->request->get('scope', '');
         $scopes = $this->validateScopes($scopeParam, $client);
 
+        // Create a new session
+        $session = new SessionEntity($this->server);
+        $session->setOwner('user', $userId);
+        $session->associateClient($client);
+
         // Generate an access token
         $accessToken = new AccessTokenEntity($this->server);
         $accessToken->setId($this->server->generateAccessToken());
         $accessToken->setExpireTime($this->getAccessTokenTTL() + time());
+<<<<<<< HEAD
         $accessToken->setClientId($client->getId());
+=======
+        $accessToken->setSession($session);
+>>>>>>> Added session support
 
         // Associate scopes with the session and access token
         // foreach ($scopes as $scope) {
         //     $accessToken->associateScope($scope);
         // }
 
+<<<<<<< HEAD
+=======
+        $this->server->getTokenType()->setSession($session);
+>>>>>>> Added session support
         $this->server->getTokenType()->setParam('access_token', $accessToken->getId());
         $this->server->getTokenType()->setParam('expires_in', $this->getAccessTokenTTL());
 
@@ -163,15 +176,23 @@ class PasswordGrant extends AbstractGrant
             $refreshToken = new RefreshTokenEntity($this->server);
             $refreshToken->setId($this->server->generateRefreshToken());
             $refreshToken->setExpireTime($this->server->getGrantType('refresh_token')->getRefreshTokenTTL() + time());
-            $refreshToken->setClientId($client->getId());
-            $refreshToken->save();
+            $refreshToken->setSession($session);
 
             $this->server->getTokenType()->setParam('refresh_token', $refreshToken->getId());
         }
 
         // Save everything
+<<<<<<< HEAD
         $accessToken->save();
         $this->server->getUsersAccessTokenStorage()->create($accessToken, $user);
+=======
+        $session->save();
+        $accessToken->save();
+
+        if ($this->server->hasGrantType('refresh_token')) {
+            $refreshToken->save();
+        }
+>>>>>>> Added session support
 
         return $this->server->getTokenType()->generateResponse();
     }
