@@ -14,6 +14,7 @@ namespace League\OAuth2\Server\Grant;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Entity\ClientEntity;
 use League\OAuth2\Server\Entity\ScopeEntity;
+use League\OAuth2\Server\Event;
 use League\OAuth2\Server\Exception;
 
 /**
@@ -238,5 +239,32 @@ abstract class AbstractGrant implements GrantTypeInterface
         }
 
         return $scopes;
+    }
+
+    protected function getInput($field, $default = null, $required = true) {
+        $value = $this->server->getRequest()->request->get($field, $default);
+
+        if ($required && is_null($value)) {
+            throw new Exception\InvalidRequestException($field);
+        }
+
+        return $value;
+    }
+
+    protected function getClient($clientId, $clientSecret = null, $redirectURI = null) {
+        // Validate client ID and client secret
+        $client = $this->server->getClientStorage()->get(
+            $clientId,
+            $clientSecret,
+            $redirectURI,
+            $this->getIdentifier()
+        );
+
+        if (($client instanceof ClientEntity) === false) {
+            $this->server->getEventEmitter()->emit(new Event\ClientAuthenticationFailedEvent($this->server->getRequest()));
+            throw new Exception\InvalidClientException();
+        }
+
+        return $client;
     }
 }

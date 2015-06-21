@@ -98,39 +98,14 @@ class PasswordGrant extends AbstractGrant
         $this->validateParams();
 
         // Get the required params
-        $clientId = $this->server->getRequest()->request->get('client_id', $this->server->getRequest()->getUser());
-        if (is_null($clientId)) {
-            throw new Exception\InvalidRequestException('client_id');
-        }
-
-        $clientSecret = $this->server->getRequest()->request->get('client_secret',
-            $this->server->getRequest()->getPassword());
-        if (is_null($clientSecret)) {
-            throw new Exception\InvalidRequestException('client_secret');
-        }
+        $clientId = $this->getInput('client_id', $this->server->getRequest()->getUser());
+        $clientSecret = $this->getInput('client_secret', $this->server->getRequest()->getPassword());
 
         // Validate client ID and client secret
-        $client = $this->server->getClientStorage()->get(
-            $clientId,
-            $clientSecret,
-            null,
-            $this->getIdentifier()
-        );
+        $client = $this->getClient($clientId, $clientSecret);
 
-        if (($client instanceof ClientEntity) === false) {
-            $this->server->getEventEmitter()->emit(new Event\ClientAuthenticationFailedEvent($this->server->getRequest()));
-            throw new Exception\InvalidClientException();
-        }
-
-        $username = $this->server->getRequest()->request->get('username', null);
-        if (is_null($username)) {
-            throw new Exception\InvalidRequestException('username');
-        }
-
-        $password = $this->server->getRequest()->request->get('password', null);
-        if (is_null($password)) {
-            throw new Exception\InvalidRequestException('password');
-        }
+        $username = $this->getInput('username');
+        $password = $this->getInput('password');
 
         // Check if user's username and password are correct
         $userId = call_user_func($this->getVerifyCredentialsCallback(), $username, $password);
