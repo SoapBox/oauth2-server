@@ -128,21 +128,14 @@ class PasswordGrant extends AbstractGrant
         $accessToken = new AccessTokenEntity($this->server);
         $accessToken->setId($this->server->generateAccessToken());
         $accessToken->setExpireTime($this->getAccessTokenTTL() + time());
-<<<<<<< HEAD
-        $accessToken->setClientId($client->getId());
-=======
         $accessToken->setSession($session);
->>>>>>> Added session support
 
         // Associate scopes with the session and access token
         // foreach ($scopes as $scope) {
         //     $accessToken->associateScope($scope);
         // }
 
-<<<<<<< HEAD
-=======
         $this->server->getTokenType()->setSession($session);
->>>>>>> Added session support
         $this->server->getTokenType()->setParam('access_token', $accessToken->getId());
         $this->server->getTokenType()->setParam('expires_in', $this->getAccessTokenTTL());
 
@@ -157,17 +150,12 @@ class PasswordGrant extends AbstractGrant
         }
 
         // Save everything
-<<<<<<< HEAD
-        $accessToken->save();
-        $this->server->getUsersAccessTokenStorage()->create($accessToken, $user);
-=======
         $session->save();
         $accessToken->save();
 
         if ($this->server->hasGrantType('refresh_token')) {
             $refreshToken->save();
         }
->>>>>>> Added session support
 
         return $this->server->getTokenType()->generateResponse();
     }
