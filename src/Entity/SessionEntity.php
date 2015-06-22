@@ -230,6 +230,20 @@ class SessionEntity
     }
 
     /**
+     * Associate a client with the session by clientId
+     *
+     * @param int $clientId The client's id
+     *
+     * @return self
+     */
+    public function associateClientById($clientId)
+    {
+        $this->client = $this->server->getClientStorage()->get($clientId);
+
+        return $this;
+    }
+
+    /**
      * Return the session client
      *
      * @return \League\OAuth2\Server\Entity\ClientEntity

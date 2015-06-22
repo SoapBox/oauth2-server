@@ -44,9 +44,17 @@ class ResourceServer extends AbstractServer
      *
      * @return self
      */
-    public function __construct() {
+    public function __construct(
+        AccessTokenInterface $accessTokenStorage,
+        ClientInterface $clientStorage,
+        SessionInterface $sessionStorage
+    ) {
         // Set Bearer as the default token type
         $this->setTokenType(new Bearer());
+
+        $this->setAccessTokenStorage($accessTokenStorage);
+        $this->setClientStorage($clientStorage);
+        $this->setSessionStorage($sessionStorage);
 
         parent::__construct();
 

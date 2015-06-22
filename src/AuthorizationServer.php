@@ -14,6 +14,10 @@ namespace League\OAuth2\Server;
 use League\OAuth2\Server\Grant\GrantTypeInterface;
 use League\OAuth2\Server\TokenType\Bearer;
 use League\OAuth2\Server\Util\TokenGeneratorInterface;
+use League\OAuth2\Server\Storage\AccessTokenInterface;
+use League\OAuth2\Server\Storage\ClientInterface;
+use League\OAuth2\Server\Storage\RefreshTokenInterface;
+use League\OAuth2\Server\Storage\SessionInterface;
 use League\OAuth2\Server\Exception\ServerErrorException;
 
 /**
@@ -83,11 +87,21 @@ class AuthorizationServer extends AbstractServer
      *
      * @return self
      */
-    public function __construct(TokenGeneratorInterface $tokenGenerator)
-    {
+    public function __construct(
+        TokenGeneratorInterface $tokenGenerator,
+        AccessTokenInterface $accessTokenStorage,
+        ClientInterface $clientStorage,
+        RefreshTokenInterface $refreshTokenStorage,
+        SessionInterface $sessionStorage
+    ) {
         // Set Bearer as the default token type
         $this->setTokenType(new Bearer());
+
         $this->tokenGenerator = $tokenGenerator;
+        $this->setAccessTokenStorage($accessTokenStorage);
+        $this->setClientStorage($clientStorage);
+        $this->setRefreshTokenStorage($refreshTokenStorage);
+        $this->setSessionStorage($sessionStorage);
 
         parent::__construct();
 
