@@ -106,12 +106,14 @@ class RefreshTokenGrant extends AbstractGrant
         $oldRefreshToken = $this->server->getRefreshTokenStorage()->get($oldRefreshTokenParam);
 
         if (($oldRefreshToken instanceof RefreshTokenEntity) === false) {
+            if ($this->server->getRefreshTokenStorage()->isConsumed($oldRefreshTokenParam)) {
+                $this->server->getEventEmitter()->emit(new Event\RefreshTokenConsumedErrorEvent($this->server->getRequest()));
+            }
             throw new Exception\InvalidRefreshException();
         }
 
         // Ensure the old refresh token hasn't expired
         if ($oldRefreshToken->isExpired() === true) {
-            $this->server->getEventEmitter()->emit(new Event\RefreshTokenConsumedErrorEvent($this->server->getRequest()));
             throw new Exception\InvalidRefreshException();
         }
 
