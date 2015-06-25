@@ -19,22 +19,6 @@ class AccessTokenEntity extends AbstractTokenEntity
   protected $refreshToken = null;
 
     /**
-     * Get session
-     *
-     * @return \League\OAuth2\Server\Entity\SessionEntity
-     */
-    public function getSession()
-    {
-        if ($this->session instanceof SessionEntity) {
-            return $this->session;
-        }
-
-        $this->session = $this->server->getSessionStorage()->getByAccessToken($this);
-
-        return $this->session;
-    }
-
-    /**
      * Check if access token has an associated scope
      *
      * @param string $scope Scope to check
@@ -74,7 +58,7 @@ class AccessTokenEntity extends AbstractTokenEntity
         $this->server->getAccessTokenStorage()->create(
             $this->getId(),
             $this->getExpireTime(),
-            $this->getClientId(),
+            $this->getSession()->getId(),
             $this->getRefreshToken()
         );
 

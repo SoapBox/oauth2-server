@@ -93,39 +93,22 @@ class RefreshTokenGrant extends AbstractGrant
      */
     public function completeFlow()
     {
-        $clientId = $this->server->getRequest()->request->get('client_id', $this->server->getRequest()->getUser());
-        if (is_null($clientId)) {
-            throw new Exception\InvalidRequestException('client_id');
-        }
-
-        $clientSecret = $this->server->getRequest()->request->get('client_secret',
-            $this->server->getRequest()->getPassword());
-        if (is_null($clientSecret)) {
-            throw new Exception\InvalidRequestException('client_secret');
-        }
+        // Get the required params
+        $clientId = $this->getInput('client_id', $this->server->getRequest()->getUser());
+        $clientSecret = $this->getInput('client_secret', $this->server->getRequest()->getPassword());
 
         // Validate client ID and client secret
-        $client = $this->server->getClientStorage()->get(
-            $clientId,
-            $clientSecret,
-            null,
-            $this->getIdentifier()
-        );
+        $client = $this->getClient($clientId, $clientSecret);
 
-        if (($client instanceof ClientEntity) === false) {
-            $this->server->getEventEmitter()->emit(new Event\ClientAuthenticationFailedEvent($this->server->getRequest()));
-            throw new Exception\InvalidClientException();
-        }
-
-        $oldRefreshTokenParam = $this->server->getRequest()->request->get('refresh_token', null);
-        if ($oldRefreshTokenParam === null) {
-            throw new Exception\InvalidRequestException('refresh_token');
-        }
+        $oldRefreshTokenParam = $this->getInput('refresh_token');
 
         // Validate refresh token
         $oldRefreshToken = $this->server->getRefreshTokenStorage()->get($oldRefreshTokenParam);
 
         if (($oldRefreshToken instanceof RefreshTokenEntity) === false) {
+            if ($this->server->getRefreshTokenStorage()->isConsumed($oldRefreshTokenParam)) {
+                $this->server->getEventEmitter()->emit(new Event\RefreshTokenConsumedErrorEvent($this->server->getRequest()));
+            }
             throw new Exception\InvalidRefreshException();
         }
 
@@ -134,8 +117,9 @@ class RefreshTokenGrant extends AbstractGrant
             throw new Exception\InvalidRefreshException();
         }
 
+        $session = $oldRefreshToken->getSession();
+
         // // Get the scopes for the original session
-        // $session = $oldAccessToken->getSession();
         // $scopes = $this->formatScopes($session->getScopes());
         //
         // // Get and validate any requested scopes
@@ -161,7 +145,7 @@ class RefreshTokenGrant extends AbstractGrant
         $newAccessToken = new AccessTokenEntity($this->server);
         $newAccessToken->setId($this->server->generateAccessToken());
         $newAccessToken->setExpireTime($this->getAccessTokenTTL() + time());
-        $newAccessToken->setClientId($client->getId());
+        $newAccessToken->setSession($session);
 
         // foreach ($newScopes as $newScope) {
         //     $newAccessToken->associateScope($newScope);
@@ -175,7 +159,7 @@ class RefreshTokenGrant extends AbstractGrant
             $newRefreshToken = new RefreshTokenEntity($this->server);
             $newRefreshToken->setId($this->server->generateRefreshToken());
             $newRefreshToken->setExpireTime($this->getRefreshTokenTTL() + time());
-            $newRefreshToken->setClientId($client->getId());
+            $newRefreshToken->setSession($session);
             $newRefreshToken->save();
 
             $this->server->getTokenType()->setParam('refresh_token', $newRefreshToken->getId());

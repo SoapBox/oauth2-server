@@ -11,9 +11,14 @@
 
 namespace League\OAuth2\Server;
 
+use Exception;
 use League\OAuth2\Server\Grant\GrantTypeInterface;
 use League\OAuth2\Server\TokenType\Bearer;
 use League\OAuth2\Server\Util\TokenGeneratorInterface;
+use League\OAuth2\Server\Storage\AccessTokenInterface;
+use League\OAuth2\Server\Storage\ClientInterface;
+use League\OAuth2\Server\Storage\RefreshTokenInterface;
+use League\OAuth2\Server\Storage\SessionInterface;
 use League\OAuth2\Server\Exception\ServerErrorException;
 
 /**
@@ -83,11 +88,21 @@ class AuthorizationServer extends AbstractServer
      *
      * @return self
      */
-    public function __construct(TokenGeneratorInterface $tokenGenerator)
-    {
+    public function __construct(
+        TokenGeneratorInterface $tokenGenerator,
+        AccessTokenInterface $accessTokenStorage,
+        ClientInterface $clientStorage,
+        RefreshTokenInterface $refreshTokenStorage,
+        SessionInterface $sessionStorage
+    ) {
         // Set Bearer as the default token type
         $this->setTokenType(new Bearer());
+
         $this->tokenGenerator = $tokenGenerator;
+        $this->setAccessTokenStorage($accessTokenStorage);
+        $this->setClientStorage($clientStorage);
+        $this->setRefreshTokenStorage($refreshTokenStorage);
+        $this->setSessionStorage($sessionStorage);
 
         parent::__construct();
 
@@ -307,25 +322,23 @@ class AuthorizationServer extends AbstractServer
      * Generate a new access token
      */
     public function generateAccessToken() {
-        $accessToken = $this->tokenGenerator->generateAccessToken();
-
-        if (is_null($accessToken)) {
-            throw new ServerErrorException();
+        try {
+            $accessToken = $this->tokenGenerator->generateAccessToken();
+            return $accessToken;
+        } catch (Exception $e) {
+            throw new ServerErrorException('Failed generating access token.');
         }
-
-        return $accessToken;
     }
 
     /**
      * Generate a new refresh token
      */
     public function generateRefreshToken() {
-        $refreshToken = $this->tokenGenerator->generateRefreshToken();
-
-        if (is_null($refreshToken)) {
-            throw new ServerErrorException();
+        try {
+            $refreshToken = $this->tokenGenerator->generateRefreshToken();
+            return $refreshToken;
+        } catch (Exception $e) {
+            throw new ServerErrorException('Failed generating refresh token');
         }
-
-        return $refreshToken;
     }
 }
