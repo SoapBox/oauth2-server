@@ -11,7 +11,6 @@
 
 namespace League\OAuth2\Server;
 
-use Exception;
 use League\OAuth2\Server\Grant\GrantTypeInterface;
 use League\OAuth2\Server\TokenType\Bearer;
 use League\OAuth2\Server\Util\TokenGeneratorInterface;
@@ -325,7 +324,7 @@ class AuthorizationServer extends AbstractServer
         try {
             $accessToken = $this->tokenGenerator->generateAccessToken();
             return $accessToken;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new ServerErrorException('Failed generating access token.');
         }
     }
@@ -337,7 +336,7 @@ class AuthorizationServer extends AbstractServer
         try {
             $refreshToken = $this->tokenGenerator->generateRefreshToken();
             return $refreshToken;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new ServerErrorException('Failed generating refresh token');
         }
     }
