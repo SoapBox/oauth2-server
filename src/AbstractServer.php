@@ -169,6 +169,10 @@ abstract class AbstractServer
     {
         if ($this->request === null) {
             $this->request = Request::createFromGlobals();
+            if (0 === strpos($this->request->headers->get('Content-Type'), 'application/json')) {
+                $data = json_decode($this->request->getContent(), true);
+                $this->request->request->replace(is_array($data) ? $data : array());
+            }
         }
 
         return $this->request;
